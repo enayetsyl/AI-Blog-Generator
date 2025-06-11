@@ -2,10 +2,12 @@ import os
 import base64
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 from google import genai
 from google.genai import types
 
+load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
@@ -35,7 +37,7 @@ def generate_blog():
     contents = [
         types.Content(
             role="user",
-            parts=[types.Part.from_text(prompt)]
+            parts=[ types.Part(text=prompt) ]
         )
     ]
     config = types.GenerateContentConfig(response_mime_type="text/plain")
@@ -62,7 +64,7 @@ def generate_image():
     contents = [
         types.Content(
             role="user",
-            parts=[types.Part.from_text(prompt)]
+           parts=[ types.Part(text=prompt) ]
         )
     ]
     config = types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
