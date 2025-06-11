@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import  { useState, useRef } from "react";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
@@ -46,7 +46,7 @@ export default function Home() {
       if (!blogRes.ok) throw new Error(`Blog error ${blogRes.status}`);
       const { blog } = await blogRes.json();
       setPost(blog);
-
+      toast("Blog created Successfully.")
       // Generate a single image
       const imgRes = await fetch(`${BACKEND_BASE_URL}/generate_image`, {
         method: "POST",
@@ -58,6 +58,7 @@ export default function Home() {
       if (typeof image === "string") {
         setImage(image);
       }
+      toast("Image generated successfully.")
     } catch (err) {
       console.error("Generation error:", err);
     } finally {
