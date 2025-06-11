@@ -2,8 +2,7 @@ import os
 import base64
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
@@ -30,13 +29,14 @@ def generate_blog():
         f"incorporating keywords {', '.join(keywords)} "
         f"with approximately {length} words."
     )
+
     contents = [
-        types.Content(
+        genai.types.Content(
             role="user",
-            parts=[types.Part.from_text(text=prompt_text)]
+            parts=[genai.types.Part.from_text(text=prompt_text)]
         )
     ]
-    config = types.GenerateContentConfig(response_mime_type="text/plain")
+    config = genai.types.GenerateContentConfig(response_mime_type="text/plain")
 
     blog_text = ""
     for chunk in client.models.generate_content_stream(
@@ -59,14 +59,13 @@ def generate_image():
 
     prompt = f"Generate an image for a blog titled '{title}'"
     contents = [
-        types.Content(
+        genai.types.Content(
             role="user",
-            parts=[types.Part.from_text(text=prompt)]
+            parts=[genai.types.Part.from_text(text=prompt)]
         )
     ]
-    config = types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
+    config = genai.types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
 
-    # Stream until we get inline_data, then return that image
     for chunk in client.models.generate_content_stream(
         model="gemini-2.0-flash-preview-image-generation",
         contents=contents,
