@@ -2,7 +2,9 @@ import os
 import base64
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
+
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 CORS(app)
@@ -11,43 +13,42 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("Please set the GEMINI_API_KEY environment variable")
 
+# Initialize the Gen AI client
 client = genai.Client(api_key=API_KEY)
 
 
 @app.route('/generate_blog', methods=['POST'])
 def generate_blog():
     data = request.get_json()
-    title = data.get('title')
+    title    = data.get('title')
     keywords = data.get('keywords')  # list of strings
-    length = data.get('length')      # target word count
+    length   = data.get('length')    # target word count
 
     if not title or not keywords or not length:
         return jsonify({'error': 'Missing title, keywords, or length'}), 400
 
-    prompt_text = (
+    prompt = (
         f"Generate a comprehensive, engaging blog post about '{title}' "
         f"incorporating keywords {', '.join(keywords)} "
         f"with approximately {length} words."
     )
-
     contents = [
-        genai.types.Content(
+        types.Content(
             role="user",
-            parts=[genai.types.Part.from_text(text=prompt_text)]
+            parts=[types.Part.from_text(prompt)]
         )
     ]
-    config = genai.types.GenerateContentConfig(response_mime_type="text/plain")
+    config = types.GenerateContentConfig(response_mime_type="text/plain")
 
-    blog_text = ""
+    blog = ""
     for chunk in client.models.generate_content_stream(
         model="gemini-2.0-flash-lite",
         contents=contents,
         config=config
     ):
-        if chunk.text:
-            blog_text += chunk.text
+        blog += chunk.text or ""
 
-    return jsonify({'blog': blog_text})
+    return jsonify({'blog': blog})
 
 
 @app.route('/generate_image', methods=['OPTIONS', 'POST'], provide_automatic_options=True)
@@ -59,12 +60,12 @@ def generate_image():
 
     prompt = f"Generate an image for a blog titled '{title}'"
     contents = [
-        genai.types.Content(
+        types.Content(
             role="user",
-            parts=[genai.types.Part.from_text(text=prompt)]
+            parts=[types.Part.from_text(prompt)]
         )
     ]
-    config = genai.types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
+    config = types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
 
     for chunk in client.models.generate_content_stream(
         model="gemini-2.0-flash-preview-image-generation",
@@ -72,14 +73,11 @@ def generate_image():
         config=config
     ):
         for cand in chunk.candidates or []:
-            if not cand.content or not cand.content.parts:
-                continue
-            for part in cand.content.parts:
+            for part in cand.content.parts or []:
                 inline = getattr(part, "inline_data", None)
                 if inline and inline.data:
                     b64 = base64.b64encode(inline.data).decode("utf-8")
-                    data_url = f"data:{inline.mime_type};base64,{b64}"
-                    return jsonify({"image": data_url})
+                    return jsonify({"image": f"data:{inline.mime_type};base64,{b64}"})
 
     return jsonify({"error": "No image generated"}), 500
 
