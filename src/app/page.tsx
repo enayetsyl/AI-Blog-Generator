@@ -8,6 +8,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { toast } from "sonner";
 
+const BACKEND_BASE_URL = "https://ai-blog-generator-backend-1cl7.onrender.com"
+
 export default function Home() {
   const [title, setTitle] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -24,7 +26,7 @@ export default function Home() {
 
     try {
       // Generate the blog text
-      const blogRes = await fetch("http://localhost:5000/generate_blog", {
+      const blogRes = await fetch(`${BACKEND_BASE_URL}/generate_blog`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -38,7 +40,7 @@ export default function Home() {
       setPost(blog);
 
       // Generate a single image
-      const imgRes = await fetch("http://localhost:5000/generate_image", {
+      const imgRes = await fetch(`${BACKEND_BASE_URL}/generate_image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
