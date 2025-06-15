@@ -1,4 +1,4 @@
-# AI Blog & Image Generator
+# Blogsmith AI
 
 ## Introduction
 An AI-powered web application that generates engaging blog posts and accompanying images based on a user-specified title, keywords, and desired length—powered by Google’s Gemini API.
